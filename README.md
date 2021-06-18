@@ -1,4 +1,4 @@
-Simple timer and execution stopper
+:clock4: Simple timer and execution stopper
 ================================================================================
 
 This project implements a simple timer class inspired on Boost::timer. However,

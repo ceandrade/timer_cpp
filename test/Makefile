@@ -1,8 +1,7 @@
 ###############################################################################
 # Author: Carlos Eduardo de Andrade <ce.andrade@gmail.com>
 #
-# (c) Copyright 2021
-#     All Rights Reserved.
+# (c) Copyright 2021. All Rights Reserved.
 #
 #  Created on : Jun 17, 2021 by andrade
 #  Last update: Jun 17, 2021 by andrade
@@ -25,10 +24,10 @@
 ###############################################################################
 
 # Optimization switch
-OPT = opt
+# OPT = opt
 
 # Set debug mode. Either...
-# USER_DEFINES += -DDEBUG
+USER_DEFINES += -DDEBUG
 
 ###############################################################################
 # Build options
@@ -42,20 +41,16 @@ OPT = opt
 USER_INCDIRS = . ..
 
 ###############################
-# Scheduler object files.
+# Objects and test files
 ###############################
 
-UTIL_OBJS = \
-	# ../timer/execution_stopper.o
+EXECUTION_STOPPER_OBJ = ../timer/execution_stopper.o
 
-###############################
-# Test files
-###############################
+TEST_TIMER_OBJ = ./test_timer.o
+TEST_TIMER_EXE = ./test_timer
 
-TEST_MAIN = ./test_timer.o
-
-TMP1 = $(TEST_MAIN:.o=)
-TEST_EXE = $(TMP1:./test/%=%)
+TEST_EXECUTION_STOPPER_OBJ = ./test_execution_stopper.o
+TEST_EXECUTION_STOPPER_EXE = ./test_execution_stopper
 
 ###############################################################################
 # Compiler flags
@@ -144,16 +139,26 @@ endif
 .PHONY: all static clean
 .SUFFIXES: .cpp .o
 
-all: test run
+all: test_execution_stopper
 
-test: $(OBJS) $(TEST_MAIN)
+test_timer: $(TEST_TIMER_OBJ)
 	@echo "--> Linking objects... "
-	$(CXX) $(CXXFLAGS) $(OBJS) $(TEST_MAIN) -o $(TEST_EXE)
+	$(CXX) $(CXXFLAGS) $(TEST_TIMER_OBJ) -o $(TEST_TIMER_EXE)
+
+	@echo
+	@echo "--> Running tests..."
+	$(TEST_TIMER_EXE)
 	@echo
 
-run:
+test_execution_stopper: $(EXECUTION_STOPPER_OBJ) $(TEST_EXECUTION_STOPPER_OBJ)
+	@echo "--> Linking objects... "
+	$(CXX) $(CXXFLAGS) $(EXECUTION_STOPPER_OBJ) $(TEST_EXECUTION_STOPPER_OBJ) \
+	-o $(TEST_EXECUTION_STOPPER_EXE)
+
+	@echo
 	@echo "--> Running tests..."
-	$(TEST_EXE)
+	$(TEST_EXECUTION_STOPPER_EXE)
+	@echo
 
 # static: $(OBJS) $(TEST_MAIN)
 # 	@echo "--> Linking objects... "
@@ -162,18 +167,15 @@ run:
 # 	-lm -lbz2 -lz
 # 	@echo
 
-$(OBJS): INCS := $(INCLUDES)
-$(TEST_MAIN): INCS := $(INCLUDES)
-
 .cpp.o:
 	@echo "--> Compiling $<..."
-	$(CXX) $(CXXFLAGS) $(INCS) $(USER_DEFINES) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(USER_DEFINES) -c $< -o $@
 	@echo
 
 clean:
 	@echo "--> Cleaning compiled..."
-	rm -rf $(OBJS) $(TEST_MAIN)
-	rm -rf $(TEST_EXE) $(TEST_EXE)-static
+	rm -rf $(EXECUTION_STOPPER_OBJ) $(TEST_TIMER_OBJ) $(TEST_EXECUTION_STOPPER_OBJ)
+	rm -rf $(TEST_TIMER_EXE) $(TEST_EXECUTION_STOPPER_EXE)
 	rm -rf *o
 	rm -rf Debug
 	rm -rf *.dSYM

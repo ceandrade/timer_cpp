@@ -1,15 +1,11 @@
 /******************************************************************************
  * execution_stopper.hpp: Interface for ExecutionStopper class.
  *
- * Author: Carlos Eduardo de Andrade
- *         <carlos.andrade@gatech.edu / ce.andrade@gmail.com>
- *
- * (c) Copyright 2015
- *     Industrial and Systems Engineering, Georgia Institute of Technology
- *     All Rights Reserved.
+ * Author: Carlos Eduardo de Andrade <ce.andrade@gmail.com>
+ * (c) Copyright 2021. All Rights Reserved..
  *
  *  Created on : May 19, 2015 by andrade
- *  Last update: Ago 11, 2015 by andrade
+ *  Last update: Jun 17, 2021 by andrade
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -27,9 +23,7 @@
 #ifndef CEA_EXECUTIONSTOPPER_HPP_
 #define CEA_EXECUTIONSTOPPER_HPP_
 
-#include "utils/pragma_diagnostic_ignored_header.hpp"
-#include <boost/timer/timer.hpp>
-#include "utils/pragma_diagnostic_ignored_footer.hpp"
+#include "timer/timer.hpp"
 
 namespace cea {
 
@@ -46,42 +40,39 @@ namespace cea {
  */
 class ExecutionStopper {
     public:
-        /** \name Enumerations */
-        //@{
-        /// Defines with time use to stop.
-        enum class TimeType{
-            WALL,   ///< This is the regular wall clock time.
-            CPU     ///< This is the CPU/user time.
-        };
-        //@}
-
-    public:
         /** \name Public interface */
         //@{
-        /** Initialize the singleton. Must be call before any other method.
-         * \param max_time the maximum time in seconds.
-         * \param type of the time to be considered.
-         */
-        static void init(boost::timer::nanosecond_type max_time,
-                         TimeType type = TimeType::WALL);
-
+        /** Timer manipulation */
+        //@{
         /// Start the timer.
-        static void timerStart();
+        static void start() noexcept;
 
         /// Stop the timer.
-        static void timerStop();
+        static void stop() noexcept;
 
         /// Resume the timer.
-        static void timerResume();
+        static void resume() noexcept;
 
-        /// Indicates if we must stop.
-        static bool mustStop();
+        /** Set the expiration time to stop.
+         * \param expiration_time the expiration time in seconds.
+         */
+        static void setExpirationTime(double expiration_time) noexcept;
+        //@}
 
+        /** Time retrieval */
+        //@{
         /// Returns the elapsed time.
-        static boost::timer::cpu_times elapsed();
+        static double elapsed() noexcept;
+
+        /// Return true if the timer has been stopped.
+        static bool isStopped() noexcept;
+
+        // Indicate whether the timer is expired or we must stop due to SIGINT.
+        static bool isExpired() noexcept;
+        //@}
 
         /// Reset the time and stop status.
-        static void reset();
+        // static void reset();
         //@}
 
     private:
@@ -97,31 +88,21 @@ class ExecutionStopper {
         //@{
         /// Get a reference for an instance.
         static ExecutionStopper& instance();
-        //@}
 
-        /** \name Ctr-C handler */
-        //@{
-        /// Function used to emit the STOP signal.
+        /// Function used to emit the STOP signal (Ctr-C).
         static void userSignalBreak(int signum);
         //@}
 
         /** \name Data members */
         //@{
-        ///
-        /// The maximum time in seconds.
-        boost::timer::nanosecond_type max_time;
+        /// The maximum or expiration time in seconds.
+        double expiration_time;
 
-        /// The type of the time to be used to stop.
-        TimeType time_type;
-
-        /// The timer
-        boost::timer::cpu_timer timer;
+        /// The timer.
+        cea::Timer timer;
 
         /// Holds a pointer to the previous Ctrl-C handler.
         void (*previousHandler)(int);
-
-        /// Indicates if the initialization method was called.
-        bool initialized;
 
         /// Indicates if a STOP signal was emitted.
         bool stopsign;

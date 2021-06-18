@@ -20,7 +20,7 @@
  * POSSIBILITY OF SUCH DAMAGE
  ******************************************************************************/
 
-#include "timer/timer.hpp"
+#include "timer/execution_stopper.hpp"
 
 #include <iostream>
 #include <chrono>
@@ -42,55 +42,61 @@ using namespace std;
 //--------------------------------[ Main ]------------------------------------//
 
 int main(int argc, char* argv[]) {
-    cea::Timer timer;
+    using exec = cea::ExecutionStopper;
 
     cout
-    << "- After instantiation, the timer must be stopped: "
-    << (timer.isStopped()? "OK" : "FAILED")
+    << "- After instantiation, the timer must not be expired: "
+    << (!exec::isExpired()? "OK" : "FAILED")
     << endl;
-    assert(timer.isStopped());
+    assert(!exec::isExpired());
+
+    exec::setExpirationTime(5);
+    exec::start();
+
+    cout << "- Set expiration for 10 seconds. Sleep 2 seconds..." << endl;
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    cout << "- Elapsed time: " << exec::elapsed() << endl;
+    assert(exec::elapsed() < 2.1);
+
+    cout << "- Stop and sleep 2 seconds..." << endl;
+    exec::stop();
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    cout << "- Resume and sleep 2 seconds..." << endl;
+    exec::resume();
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    cout << "- Elapsed time: " << exec::elapsed() << endl;
+    assert(exec::elapsed() < 4.1);
 
     cout
-    << "- And the elapsed time must be zero: " << timer.elapsed()
+    << "- Should not be expired yet: "
+    << (!exec::isExpired()? "OK" : "FAILED")
     << endl;
-    assert(timer.elapsed() < 1.e-6);
+    assert(!exec::isExpired());
 
-    timer.start();
+    cout << "- Sleep 2 seconds for expiration..." << endl;
+    std::this_thread::sleep_for(std::chrono::seconds(2));
 
     cout
-    << "- After start, the timer must be running: "
-    << (!timer.isStopped()? "OK" : "FAILED")
+    << "- Should be expired by now: "
+    << (exec::isExpired()? "OK" : "FAILED")
     << endl;
-    assert(!timer.isStopped());
+    assert(exec::isExpired());
 
-    cout << "- Sleep for 2 seconds..." << endl;
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    cout << "- Elapsed time: " << timer.elapsed() << endl;
-    assert(timer.elapsed() < 2.1);
+    cout << "- Elapsed time: " << exec::elapsed() << endl;
+    assert(exec::elapsed() < 6.1);
 
-    cout << "- Sleep for more 2 seconds..." << endl;
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    cout << "- Elapsed time: " << timer.elapsed() << endl;
-    assert(timer.elapsed() < 4.1);
+    exec::start();
+    cout
+    << "- After resetting, should not be expired..."
+    << (!exec::isExpired()? "OK" : "FAILED")
+    << endl;
+    assert(!exec::isExpired());
 
-    timer.stop();
-    auto elapsed = timer.elapsed();
-
-    cout << "- Stopping: " << (timer.isStopped()? "OK" : "FAILED") << endl;
-    assert(timer.isStopped());
-
-    cout << "- Elapsed time: " << timer.elapsed() << endl;
-
-    cout << "- Sleep for 5 seconds..." << endl;
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    cout << "- Elapsed time: " << timer.elapsed() << endl;
-    assert(timer.elapsed() - elapsed < 1e-6);
-
-    cout << "- Resume the timer, and sleep for more 2 seconds..." << endl;
-    timer.resume();
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    cout << "- Elapsed time: " << timer.elapsed() << endl;
-    assert(timer.elapsed() < 6.1);
+    cout << "- Elapsed time: " << exec::elapsed() << endl;
+    assert(exec::elapsed() > 0.0);
 
     cout << "All tests passed";
     return 0;

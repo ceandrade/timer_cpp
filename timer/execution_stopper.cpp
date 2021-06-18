@@ -1,15 +1,11 @@
 /******************************************************************************
  * execution_stopper.cpp: Implementation for ExecutionStopper class.
  *
- * Author: Carlos Eduardo de Andrade
- *         <carlos.andrade@gatech.edu / ce.andrade@gmail.com>
- *
- * (c) Copyright 2016
- *     Industrial and Systems Engineering, Georgia Institute of Technology
- *     All Rights Reserved.
+ * Author: Carlos Eduardo de Andrade <ce.andrade@gmail.com>
+ * (c) Copyright 2021. All Rights Reserved.
  *
  *  Created on : May 19, 2015 by andrade
- *  Last update: Apr 12, 2016 by andrade
+ *  Last update: Jun 17, 2021 by andrade
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -26,80 +22,65 @@
 
 #include "execution_stopper.hpp"
 
-#include <exception>
+#include <csignal>
 #include <iostream>
 #include <limits>
-#include <signal.h>
-#include <string>
+
+#include <chrono>
 
 namespace cea {
 
 //------------------[ Default Constructor and Destructor ]--------------------//
 
 ExecutionStopper::ExecutionStopper():
-    max_time(std::numeric_limits<decltype(max_time)>::max()),
-    time_type(TimeType::WALL),
+    expiration_time(std::numeric_limits<decltype(expiration_time)>::max()),
     timer(),
-    previousHandler(nullptr),
-    initialized(false),
+    previousHandler(signal(SIGINT, userSignalBreak)),
     stopsign(false)
 {}
 
 ExecutionStopper::~ExecutionStopper() {}
 
-//------------------[ Default Constructor and Destructor ]--------------------//
+//--------------------[ Singleton instance initialization ]-------------------//
 
 ExecutionStopper& ExecutionStopper::instance() {
     static ExecutionStopper inst;
     return inst;
 }
 
-//-----------------------------[ Timer methods ]------------------------------//
+//--------------------------[ Timer manipulation ]----------------------------//
 
-void ExecutionStopper::timerStart() {
+void ExecutionStopper::start() noexcept {
     instance().timer.start();
 }
 
-void ExecutionStopper::timerStop() {
+void ExecutionStopper::stop() noexcept {
     instance().timer.stop();
 }
 
-void ExecutionStopper::timerResume() {
+void ExecutionStopper::resume() noexcept {
     instance().timer.resume();
 }
 
-boost::timer::cpu_times ExecutionStopper::elapsed() {
+void ExecutionStopper::setExpirationTime(double expiration_time) noexcept {
+    instance().expiration_time = expiration_time;
+}
+
+//----------------------------[ Time retrieval ]------------------------------//
+
+double ExecutionStopper::elapsed() noexcept {
     return instance().timer.elapsed();
 }
 
-//----------------------------[ Initialization ]------------------------------//
-
-void ExecutionStopper::init(boost::timer::nanosecond_type _max_time, TimeType type) {
-    auto &inst = instance();
-    inst.previousHandler = signal(SIGINT, userSignalBreak);
-    inst.max_time = _max_time * 1e9;
-    inst.time_type = type;
-    inst.initialized = true;
+bool ExecutionStopper::isStopped() noexcept {
+    return instance().timer.isStopped();
 }
 
-//----------------------[ Check if it is time to stop ]-----------------------//
+//-----------------------------[ Timer expired ]------------------------------//
 
-bool ExecutionStopper::mustStop() {
+bool ExecutionStopper::isExpired() noexcept {
     const auto &inst = instance();
-    const auto current_time = (inst.time_type == TimeType::WALL? inst.timer.elapsed().wall :
-                               inst.timer.elapsed().user + inst.timer.elapsed().system);
-    return (current_time > inst.max_time) || inst.stopsign;
-}
-
-//--------------------------------[ Reset ]-----------------------------------//
-
-void ExecutionStopper::reset() {
-    auto &inst = instance();
-    if(inst.stopsign) {
-        inst.stopsign = false;
-        inst.previousHandler = signal(SIGINT, userSignalBreak);
-    }
-    inst.timer.start();
+    return (inst.timer.elapsed() > inst.expiration_time) || inst.stopsign;
 }
 
 //----------------------------[ Ctrl-C handler ]------------------------------//
@@ -108,7 +89,7 @@ void ExecutionStopper::userSignalBreak(int /*signum*/) {
     instance().stopsign = true;
     signal(SIGINT, instance().previousHandler);
     std::cerr << "\n\n> Ctrl-C detected. Aborting execution. "
-              << "Type Ctrl-C once more for exit immediately" << std::endl;
+              << "Type Ctrl-C once more for exit immediately." << std::endl;
 }
 
 } // end of namespace cea

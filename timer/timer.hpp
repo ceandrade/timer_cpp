@@ -2,8 +2,7 @@
  * timer.hpp: Interface for Timer class.
  *
  * Author: Carlos Eduardo de Andrade <ce.andrade@gmail.com>
- * (c) Copyright 2021
- *     All Rights Reserved.
+ * (c) Copyright 2021. All Rights Reserved..
  *
  *  Created on : Jun 17, 2021 by ceandrade
  *  Last update: Jun 17, 2021 by ceandrade
@@ -48,7 +47,7 @@ public:
      * Load instance from a unique file.
      * \param filename from where the data will be loaded.
      */
-    Timer(): start_time(), time_duration(0), stopped(true) {}
+    Timer(): start_time(), time_duration(0), is_stopped(true) {}
     //@}
 
 public:
@@ -56,25 +55,25 @@ public:
     //{@
     /// Start the timer. It also works as a reset.
     void start() noexcept {
-        stopped = false;
+        is_stopped = false;
         time_duration = nanoseconds(0);
         start_time = steady_clock::now();
     }
 
     /// Stop the timer.
     void stop() noexcept {
-        if(stopped)
+        if(is_stopped)
             return;
-        stopped = true;
+        is_stopped = true;
         time_duration += steady_clock::now() - start_time;
     }
 
     /// Resume the timer.
     void resume() noexcept {
-        if(!stopped)
+        if(!is_stopped)
             return;
         start_time = steady_clock::now();
-        stopped = false;
+        is_stopped = false;
     }
     //@}
 
@@ -82,15 +81,15 @@ public:
     //@{
     /// Return the elapsed time between starts and stops in seconds.
     double elapsed() const noexcept {
-        if(stopped)
+        if(is_stopped)
             return duration<double>(time_duration).count();
         const auto delta = (steady_clock::now() - start_time) + time_duration;
         return duration<double>(delta).count();
     }
 
     /// Return true if the timer has been stopped.
-    bool is_stopped() const noexcept {
-        return stopped;
+    bool isStopped() const noexcept {
+        return is_stopped;
     }
     //@}
 
@@ -104,7 +103,7 @@ protected:
     nanoseconds time_duration;
 
     /// Indicates whether the timer is stopped or not.
-    bool stopped;
+    bool is_stopped;
     //@}
 };
 } // end of namespace cea

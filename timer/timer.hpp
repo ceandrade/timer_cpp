@@ -36,8 +36,8 @@ using namespace std::chrono;
  * \author Carlos Eduardo de Andrade <ce.andrade@gmail.com>
  * \date 2021
  *
- * This class is simple timer class partially cloned from Boost::timer.
- * THe objective is to have a wallclock-only timer without Boost dependency.
+ * This class is simple timer class partially cloned from Boost::timer. The
+ * objective is to have a steady wallclock-only timer without Boost dependency.
  */
 class Timer {
 public:
@@ -49,18 +49,15 @@ public:
      * \param filename from where the data will be loaded.
      */
     Timer(): start_time(), time_duration(0), stopped(true) {}
-
-    /// Default destructor.
-    ~Timer() = default;
     //@}
 
 public:
     /** Timer manipulation */
     //{@
-    /// Start the timer. Also works are a reset.
+    /// Start the timer. It also works as a reset.
     void start() noexcept {
         stopped = false;
-        time_duration = milliseconds(0);
+        time_duration = nanoseconds(0);
         start_time = steady_clock::now();
     }
 
@@ -69,12 +66,11 @@ public:
         if(stopped)
             return;
         stopped = true;
-        time_duration +=
-            duration_cast<milliseconds>(steady_clock::now() - start_time);
+        time_duration += steady_clock::now() - start_time;
     }
 
     /// Resume the timer.
-    void resume() {
+    void resume() noexcept {
         if(!stopped)
             return;
         start_time = steady_clock::now();
@@ -84,18 +80,16 @@ public:
 
     /** Time retrieval */
     //@{
-    /// Return how much wall-clock time has passed in seconds.
-    double elapsed() const {
+    /// Return the elapsed time between starts and stops in seconds.
+    double elapsed() const noexcept {
         if(stopped)
             return duration<double>(time_duration).count();
-        auto delta =
-            duration_cast<milliseconds>(steady_clock::now() - start_time) +
-            time_duration;
-        return std::chrono::duration<double>(delta).count();
+        const auto delta = (steady_clock::now() - start_time) + time_duration;
+        return duration<double>(delta).count();
     }
 
     /// Return true if the timer has been stopped.
-    bool is_stopped() const {
+    bool is_stopped() const noexcept {
         return stopped;
     }
     //@}
@@ -107,7 +101,7 @@ protected:
     time_point<steady_clock> start_time;
 
     /// Holds how much time has passed between timer starts and stops.
-    milliseconds time_duration;
+    nanoseconds time_duration;
 
     /// Indicates whether the timer is stopped or not.
     bool stopped;

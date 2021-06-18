@@ -62,6 +62,11 @@ int main(int argc, char* argv[]) {
     << endl;
     assert(timer.is_stopped());
 
+    cout
+    << "- And the elapsed time must be zero: " << timer.elapsed()
+    << endl;
+    assert(timer.elapsed() < 1.e-6);
+
     timer.start();
 
     cout

@@ -31,7 +31,7 @@ namespace cea {
  * \brief ExecutionStopper class.
  *
  * \author Carlos Eduardo de Andrade <ce.andrade@gmail.com>
- * \date 2015
+ * \date 2021
  *
  * This class is a singleton used during the algorithm execution to stop
  * by time or user interference. It holds a timer that be controlled from

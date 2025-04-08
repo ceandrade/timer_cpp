@@ -1,27 +1,27 @@
 Contributing
 =======================
 
-Although the code is an experimental one, we aim to write an efficient and
-consistent code. So, you should keep in mind the balance between memory
-utilization and code efficiency and pay special attention to cache utilization.
-This aspect is very important when using multi-threads applications with shared
-memory.
+Although the code is experimental, we aim to write efficient and consistent code.
+So, you should keep in mind the balance between memory utilization and
+code efficiency and pay special attention to cache utilization.
+This aspect is very important when using multi-thread applications
+with shared memory.
 
 Style
 -----------------------
 
-Please, follow the general coding style. Since it is too long to describe all
-details here, study the code already written. However, in general,
+Please, follow the general coding style. Since it is too long to describe
+all details here, study the code already written. However, in general,
 
 - Name classes, methods, and variables as clear and meaningful as possible;
 
-- Write short commentaries on the code flow to reading more accessible and
-  faster;
+- Write short commentaries on the code flow to make reading more accessible
+  and faster;
 
-- Use Doxygen to properly document the code, especially the classes and methods
-  definitions;
+- Use Doxygen to properly document the code, especially the classes and
+  methods definitions;
 
-- No trailing spaces, no tabs, Unix/POSIX end of line. Try to keep line
+- No trailing spaces, no tabs, Unix/POSIX end of line. Try to keep the lines
   within 80 columns and do not exceed 120 columns;
 
 - Always compile your code using all warning flags activated.
@@ -30,11 +30,12 @@ details here, study the code already written. However, in general,
 - Always use [cppcheck](http://cppcheck.sourceforge.net) to check for flaws
   and improve the code quality;
 
-- Use [Valgrind](http://valgrind.org) to check for memory leaks and other
-  improvements;
+- Use [Valgrind](http://valgrind.org) to check for memory leaks
+  and other improvements;
 
-- Do not use system specific code/headers. Your code must compile in several
-  systems with minimum change.
+- Do not use system-specific code or headers. Your code must be compiled
+  in several systems with minimal change;
 
-- Do not use Boost or any other library. This code is meant to replace a older
-  version with Boost dependencies. Only use standard C++ headers and libraries.
+- Do not use Boost or any other library. This code is meant to replace
+  an older version with Boost dependencies. Only use standard C++ headers
+  and libraries.

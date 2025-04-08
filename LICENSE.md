@@ -1,7 +1,7 @@
 BSD License
 ========================
 
-Copyright (c) 2021, Carlos Eduardo de Andrade. All other rights reserved.
+Copyright (c) 2021, 2025, Carlos Eduardo de Andrade. All other rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are only permitted provided that the following conditions are

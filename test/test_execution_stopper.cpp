@@ -2,10 +2,10 @@
  * test_timer.cpp: Testing code for timer class.
  *
  * Author: Carlos Eduardo de Andrade <ce.andrade@gmail.com>
- * (c) Copyright 2021. All Rights Reserved.
+ * (c) Copyright 2021, 2025. All Rights Reserved.
  *
  *  Created on : Jun 17, 2021 by ceandrade
- *  Last update: Jun 17, 2021 by ceandrade
+ *  Last update: Apr 08, 2025 by ceandrade
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -24,24 +24,27 @@
 
 #include <iostream>
 #include <chrono>
+#include <csignal>
 #include <thread>
 
 using namespace std;
+using namespace std::chrono_literals;
 
 //-------------------------------[ Assert ]-----------------------------------//
 
-// In some compiler, the assert on <cassert> is emptied define. So, we just
-// redefined it here (leterally, copied the code from assert.h)
+// In some compilers, the `assert` function in header <cassert>
+// is emptied defined. So, we just redefined it here
+// (literally, we copied the code from `assert.h`).
 #undef assert
 #undef __assert
-#define assert(e)  \
+#define assert(e) \
     ((void) ((e) ? ((void)0) : __assert (#e, __FILE__, __LINE__)))
 #define __assert(e, file, line) \
     ((void)printf ("%s:%d: failed assertion `%s'\n", file, line, e), abort())
 
 //--------------------------------[ Main ]------------------------------------//
 
-int main(int argc, char* argv[]) {
+int main() {
     using exec = cea::ExecutionStopper;
 
     cout
@@ -50,25 +53,25 @@ int main(int argc, char* argv[]) {
     << endl;
     assert(!exec::isExpired());
 
-    exec::setExpirationTime(5);
+    exec::setExpirationTime(5s);
     exec::start();
 
     cout << "- Set expiration for 10 seconds. Sleep 2 seconds..." << endl;
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(2s);
 
     cout << "- Elapsed time: " << exec::elapsed() << endl;
-    assert(exec::elapsed() < 2.1);
+    assert(exec::elapsed() < 2.1s);
 
     cout << "- Stop and sleep 2 seconds..." << endl;
     exec::stop();
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(2s);
 
     cout << "- Resume and sleep 2 seconds..." << endl;
     exec::resume();
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(2s);
 
     cout << "- Elapsed time: " << exec::elapsed() << endl;
-    assert(exec::elapsed() < 4.1);
+    assert(exec::elapsed() < 4.1s);
 
     cout
     << "- Should not be expired yet: "
@@ -77,7 +80,7 @@ int main(int argc, char* argv[]) {
     assert(!exec::isExpired());
 
     cout << "- Sleep 2 seconds for expiration..." << endl;
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(2s);
 
     cout
     << "- Should be expired by now: "
@@ -86,7 +89,7 @@ int main(int argc, char* argv[]) {
     assert(exec::isExpired());
 
     cout << "- Elapsed time: " << exec::elapsed() << endl;
-    assert(exec::elapsed() < 6.1);
+    assert(exec::elapsed() < 6.1s);
 
     exec::start();
     cout
@@ -96,7 +99,18 @@ int main(int argc, char* argv[]) {
     assert(!exec::isExpired());
 
     cout << "- Elapsed time: " << exec::elapsed() << endl;
-    assert(exec::elapsed() > 0.0);
+    assert(exec::elapsed() == 0s);
+
+    exec::setExpirationTime(5s);
+    exec::start();
+    std::this_thread::sleep_for(2s);
+    std::raise(SIGINT);
+
+    cout
+    << "- After resetting, we wait 2 seconds and sent a Ctrl-C signal: "
+    << (exec::isExpired()? "OK" : "FAILED")
+    << endl;
+    assert(exec::isExpired());
 
     cout << "All tests passed";
     return 0;

@@ -1,10 +1,10 @@
 ###############################################################################
 # Author: Carlos Eduardo de Andrade <ce.andrade@gmail.com>
 #
-# (c) Copyright 2021. All Rights Reserved.
+# (c) Copyright 2021, 2025. All Rights Reserved.
 #
 #  Created on : Jun 17, 2021 by andrade
-#  Last update: Jun 17, 2021 by andrade
+#  Last update: Apr 08, 2025 by andrade
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -24,10 +24,10 @@
 ###############################################################################
 
 # Optimization switch
-# OPT = opt
+OPT = opt
 
 # Set debug mode. Either...
-USER_DEFINES += -DDEBUG
+#USER_DEFINES += -DDEBUG
 
 ###############################################################################
 # Build options
@@ -57,15 +57,15 @@ TEST_EXECUTION_STOPPER_EXE = ./test_execution_stopper
 ###############################################################################
 
 ifeq ($(shell uname -s),Darwin)
-    SYSTEM = macosx
+	SYSTEM = macosx
 else
-    SYSTEM = linux
+	SYSTEM = linux
 endif
 
 ifeq ($(SYSTEM), macosx)
 	CXX = clang++
-	CXXFLAGS=-Xpreprocessor -fopenmp
-	# CXXFLAGS=-stdlib=libc++ -fopenmp
+	CXXFLAGS = -Xpreprocessor -fopenmp -Wreturn-type
+	# CXXFLAGS = -stdlib=libc++ -fopenmp
 
 	# CXX = clang++-mp-10
 	# CXXFLAGS=-fopenmp
@@ -73,22 +73,20 @@ else
 	CXX = g++
 endif
 
-# Define the usage of C++17.
-USER_FLAGS += -std=c++17
+USER_FLAGS += -std=c++20
 
 # Compiler flags for debugging
-ifneq ($(OPT), opt)
-	USER_FLAGS += -ggdb3 -fexceptions -fno-omit-frame-pointer \
-		-fno-optimize-sibling-calls -fno-inline
-else
+ifeq ($(OPT), opt)
 	USER_FLAGS += -O3 -fomit-frame-pointer -funroll-loops
 	ifeq ($(CXX), g++)
 		USER_FLAGS += -ftracer -fpeel-loops -fprefetch-loop-arrays
 	endif
+else
+	USER_FLAGS += -ggdb2 -fexceptions -fno-omit-frame-pointer \
+		-fno-optimize-sibling-calls -fno-inline
 endif
-
 # Include parallel stuff
-USER_FLAGS += -pthread
+USER_FLAGS += -pthread -fopenmp
 
 # Flags
 USER_FLAGS += -Wall -Wextra -Wcast-align -Wcast-qual -Wdisabled-optimization \
@@ -96,11 +94,14 @@ USER_FLAGS += -Wall -Wextra -Wcast-align -Wcast-qual -Wdisabled-optimization \
 	-Wpointer-arith -Wredundant-decls -Wstrict-aliasing=2 \
 	-Wfloat-equal -Weffc++
 
+# Used when we get memory errors.
+# USER_FLAGS += -fsanitize=address
+
 # Paranoid mode!!!
 # Used to analyze format of structures
-#USER_FLAGS += -Wpacked -Wpadded
-#USER_FLAGS += -Wconversion
-#USER_FLAGS += -Wunsafe-loop-optimizations
+# USER_FLAGS += -Wpacked -Wpadded
+# USER_FLAGS += -Wconversion
+# USER_FLAGS += -Wunsafe-loop-optimizations
 
 ###############################################################################
 # Compiler and linker defs
@@ -129,17 +130,10 @@ endif
 # Build Rules
 ###############################################################################
 
-#GIT_VERSION := $(shell git describe --abbrev=4 --always --tags)
-#GIT_VERSION := $(shell git describe --always --tags)
-
-###############################################################################
-# Build Rules
-###############################################################################
-
-.PHONY: all static clean
+.PHONY: all clean
 .SUFFIXES: .cpp .o
 
-all: test_execution_stopper
+all: test_timer test_execution_stopper
 
 test_timer: $(TEST_TIMER_OBJ)
 	@echo "--> Linking objects... "
@@ -159,13 +153,6 @@ test_execution_stopper: $(EXECUTION_STOPPER_OBJ) $(TEST_EXECUTION_STOPPER_OBJ)
 	@echo "--> Running tests..."
 	$(TEST_EXECUTION_STOPPER_EXE)
 	@echo
-
-# static: $(OBJS) $(TEST_MAIN)
-# 	@echo "--> Linking objects... "
-# 	$(CXX) -static -static-libgcc -static-libstdc++ $(CXXFLAGS) \
-# 	$(OBJS) $(TEST_MAIN) -o $(TEST_EXE)-static \
-# 	-lm -lbz2 -lz
-# 	@echo
 
 .cpp.o:
 	@echo "--> Compiling $<..."

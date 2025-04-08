@@ -2,10 +2,10 @@
  * execution_stopper.hpp: Interface for ExecutionStopper class.
  *
  * Author: Carlos Eduardo de Andrade <ce.andrade@gmail.com>
- * (c) Copyright 2021. All Rights Reserved..
+ * (c) Copyright 2021, 2025. All Rights Reserved..
  *
- *  Created on : May 19, 2015 by andrade
- *  Last update: Jun 17, 2021 by andrade
+ *  Created on : May 19, 2015 by ceandrade
+ *  Last update: Apr 08, 2025 by ceandrade
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -25,18 +25,20 @@
 
 #include "timer/timer.hpp"
 
+#include <chrono>
+
 namespace cea {
 
 /**
  * \brief ExecutionStopper class.
  *
  * \author Carlos Eduardo de Andrade <ce.andrade@gmail.com>
- * \date 2021
+ * \date 2025
  *
- * This class is a singleton used during the algorithm execution to stop
- * by time or user interference. It holds a timer that be controlled from
- * external calls. It also overwrite the Ctrl-C signal handling to allow a
- * softer finish of the algorithm.
+ * This class is a singleton designed to halt algorithm execution due to
+ * either elapsed time or user intervention. It features a timer that can be
+ * controlled through external calls. Additionally, it overrides
+ * the Ctrl-C signal handling to enable a smoother termination of the algorithm.
  */
 class ExecutionStopper {
     public:
@@ -56,13 +58,16 @@ class ExecutionStopper {
         /** Set the expiration time to stop.
          * \param expiration_time the expiration time in seconds.
          */
-        static void setExpirationTime(double expiration_time) noexcept;
+        static void setExpirationTime(std::chrono::seconds expiration_time) noexcept;
         //@}
 
         /** Time retrieval */
         //@{
-        /// Returns the elapsed time.
-        static double elapsed() noexcept;
+        /// Returns the elapsed time in seconds.
+        static std::chrono::seconds elapsed() noexcept;
+
+        /// Returns the elapsed time in seconds.
+        static std::chrono::nanoseconds elapsedInNanoseconds() noexcept;
 
         /// Return true if the timer has been stopped.
         static bool isStopped() noexcept;
@@ -96,7 +101,7 @@ class ExecutionStopper {
         /** \name Data members */
         //@{
         /// The maximum or expiration time in seconds.
-        double expiration_time;
+        std::chrono::seconds expiration_time;
 
         /// The timer.
         cea::Timer timer;

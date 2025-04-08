@@ -2,10 +2,10 @@
  * timer.hpp: Interface for Timer class.
  *
  * Author: Carlos Eduardo de Andrade <ce.andrade@gmail.com>
- * (c) Copyright 2021. All Rights Reserved..
+ * (c) Copyright 2021, 2025. All Rights Reserved.
  *
  *  Created on : Jun 17, 2021 by ceandrade
- *  Last update: Jun 17, 2021 by ceandrade
+ *  Last update: Apr 08, 2025 by ceandrade
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -35,19 +35,16 @@ using namespace std::chrono;
  * \author Carlos Eduardo de Andrade <ce.andrade@gmail.com>
  * \date 2021
  *
- * This class is simple timer class partially cloned from Boost::timer. The
- * objective is to have a steady wallclock-only timer without Boost dependency.
+ * This class is a simple timer partially cloned from Boost::timer.
+ * The objective is to have a steady wallclock-only timer without
+ * a Boost dependency.
  */
 class Timer {
 public:
     /** \name Constructor and destructor */
     //@{
-    /** Default Constructor.
-     *
-     * Load instance from a unique file.
-     * \param filename from where the data will be loaded.
-     */
-    Timer(): start_time(), time_duration(0), is_stopped(true) {}
+    /// Default Constructor.
+    Timer(): start_time {}, time_duration {0}, is_stopped {true} {}
     //@}
 
 public:
@@ -56,7 +53,7 @@ public:
     /// Start the timer. It also works as a reset.
     void start() noexcept {
         is_stopped = false;
-        time_duration = nanoseconds(0);
+        time_duration = nanoseconds {0};
         start_time = steady_clock::now();
     }
 
@@ -79,12 +76,17 @@ public:
 
     /** Time retrieval */
     //@{
-    /// Return the elapsed time between starts and stops in seconds.
-    double elapsed() const noexcept {
+    /// Return the elapsed time between starts and stops in nanoseconds.
+    std::chrono::nanoseconds elapsedInNanoseconds() const noexcept {
         if(is_stopped)
-            return duration<double>(time_duration).count();
+            return time_duration;
         const auto delta = (steady_clock::now() - start_time) + time_duration;
-        return duration<double>(delta).count();
+        return delta;
+    }
+
+    /// Return the elapsed time between starts and stops in seconds.
+    std::chrono::seconds elapsed() const noexcept {
+        return duration_cast<seconds>(this->elapsedInNanoseconds());
     }
 
     /// Return true if the timer has been stopped.

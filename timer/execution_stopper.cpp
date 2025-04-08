@@ -2,10 +2,10 @@
  * execution_stopper.cpp: Implementation for ExecutionStopper class.
  *
  * Author: Carlos Eduardo de Andrade <ce.andrade@gmail.com>
- * (c) Copyright 2021. All Rights Reserved.
+ * (c) Copyright 2021, 2025. All Rights Reserved.
  *
  *  Created on : May 19, 2015 by andrade
- *  Last update: Jun 17, 2021 by andrade
+ *  Last update: Apr 08, 2025 by andrade
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -33,10 +33,10 @@ namespace cea {
 //------------------[ Default Constructor and Destructor ]--------------------//
 
 ExecutionStopper::ExecutionStopper():
-    expiration_time(std::numeric_limits<decltype(expiration_time)>::max()),
-    timer(),
-    previousHandler(signal(SIGINT, userSignalBreak)),
-    stopsign(false)
+    expiration_time {std::numeric_limits<decltype(expiration_time)>::max()},
+    timer {},
+    previousHandler {signal(SIGINT, userSignalBreak)},
+    stopsign {false}
 {}
 
 ExecutionStopper::~ExecutionStopper() {}
@@ -62,14 +62,20 @@ void ExecutionStopper::resume() noexcept {
     instance().timer.resume();
 }
 
-void ExecutionStopper::setExpirationTime(double expiration_time) noexcept {
+void ExecutionStopper::setExpirationTime(std::chrono::seconds expiration_time)
+    noexcept
+{
     instance().expiration_time = expiration_time;
 }
 
 //----------------------------[ Time retrieval ]------------------------------//
 
-double ExecutionStopper::elapsed() noexcept {
+std::chrono::seconds ExecutionStopper::elapsed() noexcept {
     return instance().timer.elapsed();
+}
+
+std::chrono::nanoseconds ExecutionStopper::elapsedInNanoseconds() noexcept {
+    return instance().timer.elapsedInNanoseconds();
 }
 
 bool ExecutionStopper::isStopped() noexcept {
@@ -89,7 +95,8 @@ void ExecutionStopper::userSignalBreak(int /*signum*/) {
     instance().stopsign = true;
     signal(SIGINT, instance().previousHandler);
     std::cerr << "\n\n> Ctrl-C detected. Aborting execution. "
-              << "Type Ctrl-C once more for exit immediately." << std::endl;
+              << "Type Ctrl-C once more for exit immediately."
+              << std::endl;
 }
 
 } // end of namespace cea

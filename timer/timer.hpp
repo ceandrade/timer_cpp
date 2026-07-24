@@ -2,10 +2,10 @@
  * timer.hpp: Interface for Timer class.
  *
  * Author: Carlos Eduardo de Andrade <ce.andrade@gmail.com>
- * (c) Copyright 2021, 2025. All Rights Reserved.
+ * (c) Copyright 2015, 2025. All Rights Reserved.
  *
- *  Created on : Jun 17, 2021 by ceandrade
- *  Last update: Apr 08, 2025 by ceandrade
+ * Created on : 2015-06-17 by ceandrade.
+ * Last update: 2026-07-24 by ceandrade.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -20,8 +20,7 @@
  * POSSIBILITY OF SUCH DAMAGE
  ******************************************************************************/
 
-#ifndef CEA_TIMER_HPP_
-#define CEA_TIMER_HPP_
+#pragma once
 
 #include <chrono>
 
@@ -109,5 +108,3 @@ protected:
     //@}
 };
 } // end of namespace cea
-
-#endif //CEA_TIMER_HPP_

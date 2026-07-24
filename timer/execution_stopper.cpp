@@ -2,10 +2,10 @@
  * execution_stopper.cpp: Implementation for ExecutionStopper class.
  *
  * Author: Carlos Eduardo de Andrade <ce.andrade@gmail.com>
- * (c) Copyright 2021, 2025. All Rights Reserved.
+ * (c) Copyright 2015, 2026. All Rights Reserved.
  *
- *  Created on : May 19, 2015 by andrade
- *  Last update: Apr 08, 2025 by andrade
+ * Created on : 2015-05-19 by ceandrade.
+ * Last update: 2026-07-24 by ceandrade.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -26,20 +26,32 @@
 #include <iostream>
 #include <limits>
 
-#include <chrono>
-
 namespace cea {
+
+using namespace std::chrono;
 
 //------------------[ Default Constructor and Destructor ]--------------------//
 
 ExecutionStopper::ExecutionStopper():
-    expiration_time {std::numeric_limits<decltype(expiration_time)>::max()},
+    // NOTE: we cannot setup the maximum expiration time as
+    // seconds::max() because some libraries return 0 instead the max,
+    // or use nanoseconds::max() because it would overflow.
+    expiration_time {3600 * 24 * 365},  // 1 year
     timer {},
     previousHandler {signal(SIGINT, userSignalBreak)},
-    stopsign {false}
+    expired {false},
+    watchdog_mutex {},
+    watchdog_cv {},
+    watchdog_cancelled {false},
+    watchdog {}
 {}
 
-ExecutionStopper::~ExecutionStopper() {}
+ExecutionStopper::~ExecutionStopper() {
+    watchdog_cancelled.store(true, std::memory_order_relaxed);
+    watchdog_cv.notify_all();
+    if(watchdog.joinable())
+        watchdog.join();
+}
 
 //--------------------[ Singleton instance initialization ]-------------------//
 
@@ -48,33 +60,92 @@ ExecutionStopper& ExecutionStopper::instance() {
     return inst;
 }
 
+//---------------------[ Watchdog thread management ]-------------------------//
+
+void ExecutionStopper::spawnWatchdog() noexcept {
+    // Destroy any existing watchdog (signal cancel + join).
+    watchdog_cancelled.store(true, std::memory_order_relaxed);
+    watchdog_cv.notify_all();
+    if(watchdog.joinable())
+        watchdog.join();
+    watchdog_cancelled.store(false, std::memory_order_relaxed);
+
+    // Maximum seconds safely representable as nanoseconds.
+    static constexpr auto max_safe_seconds =
+        duration_cast<seconds>(nanoseconds::max());
+
+    // Don't spawn if no meaningful deadline is set.
+    if(expiration_time >= max_safe_seconds)
+        return;
+
+    // Compute remaining time until deadline.
+    const auto total_ns = duration_cast<nanoseconds>(expiration_time);
+    const auto elapsed_ns = timer.elapsedInNanoseconds();
+    const auto remaining = total_ns - elapsed_ns;
+
+    // Already expired.
+    if(remaining <= nanoseconds{0}) {
+        expired.store(true, std::memory_order_relaxed);
+        return;
+    }
+
+    // Spawn a watchdog that sleeps until deadline or explicit cancellation.
+    watchdog = std::thread{[this, remaining] {
+        std::unique_lock lock(watchdog_mutex);
+        const bool cancelled = watchdog_cv.wait_for(
+            lock, remaining,
+            [this] { return watchdog_cancelled.load(std::memory_order_relaxed); }
+        );
+        if(!cancelled)
+            expired.store(true, std::memory_order_relaxed);
+    }};
+}
+
 //--------------------------[ Timer manipulation ]----------------------------//
 
 void ExecutionStopper::start() noexcept {
-    instance().timer.start();
+    auto& inst = instance();
+    inst.expired.store(false, std::memory_order_relaxed);
+    inst.timer.start();
+    inst.spawnWatchdog();
 }
 
 void ExecutionStopper::stop() noexcept {
-    instance().timer.stop();
+    auto& inst = instance();
+    inst.timer.stop();
+    // Kill watchdog (signal cancel + join).
+    inst.watchdog_cancelled.store(true, std::memory_order_relaxed);
+    inst.watchdog_cv.notify_all();
+    if(inst.watchdog.joinable())
+        inst.watchdog.join();
 }
 
 void ExecutionStopper::resume() noexcept {
-    instance().timer.resume();
+    auto& inst = instance();
+    // If already expired, nothing to resume.
+    if(inst.expired.load(std::memory_order_relaxed))
+        return;
+    inst.timer.resume();
+    inst.spawnWatchdog();
 }
 
-void ExecutionStopper::setExpirationTime(std::chrono::seconds expiration_time)
-    noexcept
+void ExecutionStopper::setExpirationTime(
+    seconds expiration_time) noexcept
 {
-    instance().expiration_time = expiration_time;
+    auto& inst = instance();
+    inst.expiration_time = expiration_time;
+    // If the timer is running, restart the watchdog with the new deadline.
+    if(!inst.timer.isStopped())
+        inst.spawnWatchdog();
 }
 
 //----------------------------[ Time retrieval ]------------------------------//
 
-std::chrono::seconds ExecutionStopper::elapsed() noexcept {
+seconds ExecutionStopper::elapsed() noexcept {
     return instance().timer.elapsed();
 }
 
-std::chrono::nanoseconds ExecutionStopper::elapsedInNanoseconds() noexcept {
+nanoseconds ExecutionStopper::elapsedInNanoseconds() noexcept {
     return instance().timer.elapsedInNanoseconds();
 }
 
@@ -85,14 +156,13 @@ bool ExecutionStopper::isStopped() noexcept {
 //-----------------------------[ Timer expired ]------------------------------//
 
 bool ExecutionStopper::isExpired() noexcept {
-    const auto &inst = instance();
-    return (inst.timer.elapsed() > inst.expiration_time) || inst.stopsign;
+    return instance().expired.load(std::memory_order_relaxed);
 }
 
 //----------------------------[ Ctrl-C handler ]------------------------------//
 
 void ExecutionStopper::userSignalBreak(int /*signum*/) {
-    instance().stopsign = true;
+    instance().expired.store(true, std::memory_order_relaxed);
     signal(SIGINT, instance().previousHandler);
     std::cerr << "\n\n> Ctrl-C detected. Aborting execution. "
               << "Type Ctrl-C once more for exit immediately."

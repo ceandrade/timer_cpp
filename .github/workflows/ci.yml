@@ -1,0 +1,102 @@
+###############################################################################
+# ci.yml: Continuous integration for the timer_cpp library.
+#
+# Builds and runs the test suite on Linux and macOS with GCC 15 and the
+# latest available Clang / Apple Clang, plus an ASan/UBSan sanitizer job.
+#
+# (c) Carlos Eduardo de Andrade. Copyright 2026. All Rights Reserved.
+#
+# Created on : 2026-07-24 by ceandrade.
+# Last update: 2026-07-24 by ceandrade.
+###############################################################################
+
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE*'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE*'
+
+# Cancel in-progress runs for the same ref (e.g. rapid pushes).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }} / ${{ matrix.compiler }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            compiler: gcc-15
+          - os: ubuntu-latest
+            compiler: clang
+          - os: macos-latest
+            compiler: apple-clang
+          - os: macos-latest
+            compiler: gcc-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install GCC 15 (Linux)
+        if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc-15'
+        run: |
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install -y gcc-15 g++-15
+          echo "CXX=g++-15" >> "$GITHUB_ENV"
+
+      - name: Install latest Clang (Linux)
+        if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh
+          # llvm.sh installs the latest stable release; pick the highest
+          # versioned clang++ it produced.
+          ver=$(ls /usr/bin/clang++-* | sed 's/.*clang++-//' | sort -n | tail -1)
+          echo "CXX=clang++-${ver}" >> "$GITHUB_ENV"
+
+      - name: Select Apple Clang (macOS)
+        if: matrix.os == 'macos-latest' && matrix.compiler == 'apple-clang'
+        run: echo "CXX=clang++" >> "$GITHUB_ENV"
+
+      - name: Install GCC 15 (macOS)
+        if: matrix.os == 'macos-latest' && matrix.compiler == 'gcc-15'
+        run: |
+          brew install gcc@15
+          echo "CXX=g++-15" >> "$GITHUB_ENV"
+
+      - name: Build and run tests
+        working-directory: test
+        run: make CXX="$CXX"
+
+  sanitizers:
+    name: sanitizers (asan+ubsan)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install GCC 15
+        run: |
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install -y gcc-15 g++-15
+
+      - name: Build and run with sanitizers
+        working-directory: test
+        run: >
+          make OPT=debug CXX=g++-15
+          EXTRA_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"

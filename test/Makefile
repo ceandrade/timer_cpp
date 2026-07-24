@@ -4,7 +4,7 @@
 # (c) Copyright 2021, 2025. All Rights Reserved.
 #
 #  Created on : Jun 17, 2021 by andrade
-#  Last update: Apr 08, 2025 by andrade
+#  Last update: Jul 24, 2026 by andrade
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -62,18 +62,15 @@ else
 	SYSTEM = linux
 endif
 
+# Default compiler per platform. Override from the command line for CI,
+# e.g. `make CXX=g++-15` or `make CXX=clang++-20`.
 ifeq ($(SYSTEM), macosx)
 	CXX = clang++
-	CXXFLAGS = -Xpreprocessor -fopenmp -Wreturn-type
-	# CXXFLAGS = -stdlib=libc++ -fopenmp
-
-	# CXX = clang++-mp-10
-	# CXXFLAGS=-fopenmp
 else
 	CXX = g++
 endif
 
-USER_FLAGS += -std=c++20
+USER_FLAGS += -std=c++23
 
 # Compiler flags for debugging
 ifeq ($(OPT), opt)
@@ -86,7 +83,7 @@ else
 		-fno-optimize-sibling-calls -fno-inline
 endif
 # Include parallel stuff
-USER_FLAGS += -pthread -fopenmp
+USER_FLAGS += -pthread
 
 # Flags
 USER_FLAGS += -Wall -Wextra -Wcast-align -Wcast-qual -Wdisabled-optimization \
@@ -107,8 +104,10 @@ USER_FLAGS += -Wall -Wextra -Wcast-align -Wcast-qual -Wdisabled-optimization \
 # Compiler and linker defs
 ###############################################################################
 
-# C Compiler command and flags
-CXXFLAGS += $(USER_FLAGS)
+# C Compiler command and flags. EXTRA_FLAGS is an empty hook meant to be
+# set from the command line (e.g. for sanitizers in CI):
+#     make EXTRA_FLAGS="-fsanitize=address,undefined"
+CXXFLAGS += $(USER_FLAGS) $(EXTRA_FLAGS)
 
 SHELL = /bin/bash
 
@@ -118,9 +117,6 @@ INCLUDES = `for i in $(USER_INCDIRS); do echo $$i | sed -e 's/^/-I/'; done`
 
 # List all libs
 LIBS = -lm
-ifeq ($(CXX), clang++)
-	LIBS += -lomp
-endif
 
 ifneq ($(findstring DEBUG,$(USER_DEFINES)), DEBUG)
     USER_DEFINES += -DNDEBUG

@@ -1,6 +1,8 @@
 :clock4: Simple timer and execution stopper
 ================================================================================
 
+[![CI](https://github.com/ceandrade/timer_cpp/actions/workflows/ci.yml/badge.svg)](https://github.com/ceandrade/timer_cpp/actions/workflows/ci.yml)
+
 This project implements a simple timer class inspired by Boost::timer.
 However, we use a steady wall clock and only standard C++ libraries.
 
@@ -21,7 +23,7 @@ especially the test cases showing how to use these timers.
 This project uses a permissive BSD-like license and it can be used as it
 pleases you.
 
-[Check it out the full license.](https://github.com/ceandrade/timer/blob/master/LICENSE.md)
+[Check it out the full license.](https://github.com/ceandrade/timer_cpp/blob/master/LICENSE.md)
 
 :pencil2: Contributing
 --------------------------------------------------------------------------------

@@ -44,8 +44,6 @@ USER_INCDIRS = . ..
 # Objects and test files
 ###############################
 
-EXECUTION_STOPPER_OBJ = ../timer/execution_stopper.o
-
 TEST_TIMER_OBJ = ./test_timer.o
 TEST_TIMER_EXE = ./test_timer
 
@@ -140,9 +138,9 @@ test_timer: $(TEST_TIMER_OBJ)
 	$(TEST_TIMER_EXE)
 	@echo
 
-test_execution_stopper: $(EXECUTION_STOPPER_OBJ) $(TEST_EXECUTION_STOPPER_OBJ)
+test_execution_stopper: $(TEST_EXECUTION_STOPPER_OBJ)
 	@echo "--> Linking objects... "
-	$(CXX) $(CXXFLAGS) $(EXECUTION_STOPPER_OBJ) $(TEST_EXECUTION_STOPPER_OBJ) \
+	$(CXX) $(CXXFLAGS) $(TEST_EXECUTION_STOPPER_OBJ) \
 	-o $(TEST_EXECUTION_STOPPER_EXE)
 
 	@echo
@@ -157,7 +155,7 @@ test_execution_stopper: $(EXECUTION_STOPPER_OBJ) $(TEST_EXECUTION_STOPPER_OBJ)
 
 clean:
 	@echo "--> Cleaning compiled..."
-	rm -rf $(EXECUTION_STOPPER_OBJ) $(TEST_TIMER_OBJ) $(TEST_EXECUTION_STOPPER_OBJ)
+	rm -rf $(TEST_TIMER_OBJ) $(TEST_EXECUTION_STOPPER_OBJ)
 	rm -rf $(TEST_TIMER_EXE) $(TEST_EXECUTION_STOPPER_EXE)
 	rm -rf *o
 	rm -rf Debug

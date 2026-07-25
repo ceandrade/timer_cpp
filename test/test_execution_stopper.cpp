@@ -87,6 +87,7 @@ int main() {
     << (exec::isExpired()? "OK" : "FAILED")
     << endl;
     assert(exec::isExpired());
+    assert(exec::isExpired());
 
     cout << "- Elapsed time: " << exec::elapsed() << endl;
     assert(exec::elapsed() < 6.1s);

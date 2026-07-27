@@ -1,13 +1,12 @@
 ###############################################################################
-# ci.yml: Continuous integration for the timer_cpp library.
+# @file ci.yml
+# @brief Continuous integration for the timer_cpp library.
 #
-# Builds and runs the test suite on Linux and macOS with GCC 15 and the
-# latest available Clang / Apple Clang, plus an ASan/UBSan sanitizer job.
-#
-# (c) Carlos Eduardo de Andrade. Copyright 2026. All Rights Reserved.
+# SPDX-FileCopyrightText: 2015-2026 Carlos E. Andrade <ce.andrade@gmail.com>
+# SPDX-License-Identifier: BSD-3-Clause.
 #
 # Created on : 2026-07-24 by ceandrade.
-# Last update: 2026-07-24 by ceandrade.
+# Last update: 2026-07-26 by ceandrade.
 ###############################################################################
 
 name: CI
@@ -81,6 +80,30 @@ jobs:
       - name: Build and run tests
         working-directory: test
         run: make CXX="$CXX"
+
+  windows-msvc:
+    name: windows-latest / msvc
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # The library is header-only, so MSVC just needs the repository root on
+      # its include path (for the "timer/..." includes). Each test is a single
+      # translation unit; commands are chained with && so any failure fails
+      # the step.
+      - name: Build and run tests
+        shell: cmd
+        run: >
+          cl /nologo /EHsc /std:c++latest /W3 /I.
+          test\test_timer.cpp /Fe:test_timer.exe &&
+          test_timer.exe &&
+          cl /nologo /EHsc /std:c++latest /W3 /I.
+          test\test_execution_stopper.cpp /Fe:test_execution_stopper.exe &&
+          test_execution_stopper.exe
 
   sanitizers:
     name: sanitizers (asan+ubsan)

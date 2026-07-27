@@ -1,23 +1,12 @@
 /******************************************************************************
- * timer.hpp: Interface for Timer class.
+ * @file timer.hpp
+ * @brief Interface for the Timer class.
  *
- * Author: Carlos Eduardo de Andrade <ce.andrade@gmail.com>
- * (c) Copyright 2015, 2025. All Rights Reserved.
+ * SPDX-FileCopyrightText: 2015-2026 Carlos E. Andrade <ce.andrade@gmail.com>
+ * SPDX-License-Identifier: BSD-3-Clause.
  *
  * Created on : 2015-06-17 by ceandrade.
- * Last update: 2026-07-24 by ceandrade.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE
+ * Last update: 2026-07-26 by ceandrade.
  ******************************************************************************/
 
 #pragma once
@@ -32,7 +21,7 @@ using namespace std::chrono;
  * \brief Timer class.
  *
  * \author Carlos Eduardo de Andrade <ce.andrade@gmail.com>
- * \date 2021
+ * \date 2026
  *
  * This class is a simple timer partially cloned from Boost::timer.
  * The objective is to have a steady wallclock-only timer without
